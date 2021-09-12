@@ -1,0 +1,138 @@
+package servlet;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import dao.*;
+import entity.*;
+import java.io.IOException;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
+@WebServlet("/deleteServlet")
+public class DeleteMusicServlet extends HttpServlet {
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("删除指定音乐！");
+        req.setCharacterEncoding("utf-8");
+        resp.setContentType("application/json;charset=utf-8");
+        Map<String,Object> map=new HashMap<>();
+        String strId = req.getParameter("id");
+        int id = Integer.parseInt(strId);
+        System.out.println("id:"+ id);
+        try {
+            musicdao musicdao = new musicdao();
+           music music = musicdao.findmusicById(id);
+           if(music == null) return;
+           int delete = musicdao.deletemusicById(id);
+           System.out.println("delete:"+delete);
+           if(delete == 1){
+               File file = new File("C:\\Users\\Administrator\\Desktop\\JAVA代码\\c0music\\src\\main\\webapp\\music\\"+music.getUrl()+".mp3");
+           System.out.println("文件是否存在："+file.exists());
+           System.out.println("file: "+file);
+           if(file.delete()){
+               map.put("msg",true);
+           }else {
+               map.put("msg",false);
+               System.out.println("文件名："+file.getName());
+               System.out.println("删除文件失败！");
+           }
+           }else {
+               map.put("msg",false);
+           }
+
+    }catch (Exception e) { e.printStackTrace();
+    }
+    ObjectMapper mapper=new ObjectMapper();
+    mapper.writeValue(resp.getWriter(),map);
+    }
+}
+
+
+
+
+
+
+package servlet;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dao.*;
+import entity.*;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;import java.util.ArrayList;
+import java.util.List;
+
+public class FindlovemusicServelt {
+    @WebServlet("/findLoveMusic")
+    public class FindLoveMusicServlet extends HttpServlet {
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            req.setCharacterEncoding("utf-8");
+            resp.setContentType("application/json;charset=utf-8");
+            String musicName = req.getParameter("musicName");
+            System.out.println("musicName:"+musicName);
+            user user = (user) req.getSession().getAttribute("user");
+
+            int user_id = user.getId();
+            lovemusicdao lovemusicdao = new lovemusicdao();
+            List<music> musics = new ArrayList<>();
+            if(musicName!=null) {
+                musics = lovemusicdao.findLoveMusicBykeyAndUID(musicName,user_id);
+
+            } else {
+                musics = lovemusicdao.findLovemusic(user_id);
+            }
+            for (music music : musics) {
+
+                System.out.println(music.getUrl());
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.writeValue(resp.getWriter(),musics);
+        }
+    }
+}
+
+
+
+package servlet;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import dao.*;
+import entity.*;
+import java.io.IOException;
+import java.util.List;
+
+
+@WebServlet("/findMusicServlet")
+public class FindMusicServlet extends HttpServlet {
+
+
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    req.setCharacterEncoding("UTF-8");
+    resp.setContentType("text/html; charset=utf-8");
+        String str = req.getParameter("musicName");
+    System.out.println("musicName "+str);
+    musicdao dao = new musicdao();
+    List<music> musics = null;
+    if(str!=null) {
+        musics = dao.findmusicByKey(str);
+    }else {
+        musics = dao.findmusic();
+    }for (music music : musics) {
+        System.out.println(music.getUrl());
+    }
+        ObjectMapper mapper = new ObjectMapper();
+    mapper.writeValue(resp.getWriter(),musics);
+    }
+}
